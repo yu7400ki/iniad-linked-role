@@ -1,7 +1,8 @@
+import type { Env } from "@/env";
 import { renderer } from "@/renderer";
 import { Hono } from "hono";
 
-const app = new Hono();
+const app = new Hono<Env>();
 
 app.get("*", renderer);
 
