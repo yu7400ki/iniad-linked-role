@@ -4,12 +4,15 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "wrangler pages dev dist",
-    "deploy": "$npm_execpath run build && wrangler pages deploy dist"
+    "deploy": "$npm_execpath run build && wrangler pages deploy dist",
+    "lint": "biome check ./src",
+    "format": "biome check --apply ./src"
   },
   "dependencies": {
     "hono": "^3.12.7"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.5.3",
     "@cloudflare/workers-types": "^4.20231218.0",
     "@hono/vite-cloudflare-pages": "^0.1.2",
     "@hono/vite-dev-server": "^0.4.0",
