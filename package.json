@@ -6,7 +6,8 @@
     "preview": "wrangler pages dev dist",
     "deploy": "$npm_execpath run build && wrangler pages deploy dist",
     "lint": "biome check ./src",
-    "format": "biome check --apply ./src"
+    "format": "biome check --apply ./src",
+    "prepare": "husky"
   },
   "dependencies": {
     "hono": "^3.12.7"
@@ -16,7 +17,14 @@
     "@cloudflare/workers-types": "^4.20231218.0",
     "@hono/vite-cloudflare-pages": "^0.1.2",
     "@hono/vite-dev-server": "^0.4.0",
+    "husky": "^9.0.5",
+    "lint-staged": "^15.2.0",
     "vite": "^5.0.12",
     "wrangler": "^3.22.0"
+  },
+  "lint-staged": {
+    "src/**/*.{js,ts,jsx,tsx,json}": [
+      "biome check --apply"
+    ]
   }
 }
