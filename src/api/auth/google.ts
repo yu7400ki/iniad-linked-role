@@ -5,6 +5,7 @@ import { Google, OAuth2RequestError } from "arctic";
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import { createFactory } from "hono/factory";
+import type { CookieOptions } from "hono/utils/cookie";
 
 const factory = createFactory<
   Env & {
@@ -25,24 +26,20 @@ const middleware = factory.createMiddleware(async (c, next) => {
 });
 
 const login = factory.createHandlers(middleware, async (c) => {
+  const redirect = c.req.query("redirect");
   const user = c.get("session");
-  if (user) {
-    return c.redirect("/");
-  }
+  if (user) return c.redirect(redirect || "/");
   const google = c.get("google");
   const [url, state, codeVerifier] = await getAuthorizationUrl(google);
-  setCookie(c, "state", state, {
+  const opt: CookieOptions = {
     secure: c.env.ENV !== "DEV",
     path: "/",
     httpOnly: true,
     maxAge: 60 * 10,
-  });
-  setCookie(c, "code_verifier", codeVerifier, {
-    secure: c.env.ENV !== "DEV",
-    path: "/",
-    httpOnly: true,
-    maxAge: 60 * 10,
-  });
+  };
+  setCookie(c, "state", state, opt);
+  setCookie(c, "code_verifier", codeVerifier, opt);
+  setCookie(c, "redirect", redirect || "/", opt);
   url.searchParams.append("hd", "iniad.org");
   return c.redirect(url.toString());
 });
@@ -54,6 +51,7 @@ const callback = factory.createHandlers(middleware, async (c) => {
   const state = c.req.query("state");
   const storedState = getCookie(c, "state");
   const storedCodeVerifier = getCookie(c, "code_verifier");
+  const redirect = getCookie(c, "redirect");
   if (!code || !state || !storedState || !storedCodeVerifier || state !== storedState) {
     return c.json({ error: "invalid request" }, 400);
   }
@@ -68,7 +66,7 @@ const callback = factory.createHandlers(middleware, async (c) => {
       secure: c.env.ENV !== "DEV",
     });
     setCookie(c, cookie.name, cookie.value, cookie.options);
-    return c.redirect("/");
+    return c.redirect(redirect || "/");
   } catch (err) {
     if (err instanceof OAuth2RequestError) {
       const { message, description } = err;

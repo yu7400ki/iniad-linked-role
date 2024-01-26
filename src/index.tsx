@@ -32,10 +32,11 @@ app.get("/", (c) => {
 });
 
 app.get("/login", (c) => {
+  const query = new URL(c.req.url).searchParams;
   return c.render(
     <div>
       <h1>Login</h1>
-      <a href="/api/auth/google/login">Google</a>
+      <a href={`/api/auth/google/login?${query}`}>Google</a>
     </div>,
   );
 });
