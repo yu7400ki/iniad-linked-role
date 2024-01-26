@@ -31,6 +31,7 @@ export const saveUser = async (db: DrizzleD1Database<typeof schema>, user: Googl
     .values({
       id: user.sub,
       email: user.email,
+      name: user.name,
       familyName: user.family_name,
       givenName: user.given_name,
       picture: user.picture,
@@ -39,6 +40,7 @@ export const saveUser = async (db: DrizzleD1Database<typeof schema>, user: Googl
       target: schema.user.id,
       set: {
         email: user.email,
+        name: user.name,
         familyName: user.family_name,
         givenName: user.given_name,
         picture: user.picture,

@@ -3,6 +3,7 @@ import { generateState } from "arctic";
 import type { Discord, DiscordTokens } from "arctic";
 import { eq } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
+import type { User } from "./auth";
 
 export const getAuthorizationUrl = async (discord: Discord): Promise<[URL, string]> => {
   const state = generateState();
@@ -100,17 +101,15 @@ export const linkAccount = async (
   return linkedAccount;
 };
 
-export const updateMetadata = async (
-  clientId: string,
-  accessToken: string,
-  studentId: string,
-  name: string,
-) => {
+export const updateMetadata = async (clientId: string, accessToken: string, user: User) => {
   const metadata = {};
   const url = `https://discord.com/api/v10/users/@me/applications/${clientId}/role-connection`;
+  const regex = /s([1,3]f10[0-9]{6})[0-9]@iniad.org/;
+  const match = regex.exec(user.email.toLowerCase());
+  const studentId = match ? match[1] : null;
   const body = {
     platform_name: studentId,
-    platform_username: name,
+    platform_username: user.name,
     metadata,
   };
   const response = await fetch(url, {

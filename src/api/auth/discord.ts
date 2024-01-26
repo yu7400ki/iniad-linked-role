@@ -58,16 +58,8 @@ const callback = factory.createHandlers(
     try {
       const { user, tokens } = await validationCallback(discord, code);
       const linkedAccount = await linkAccount(db, session.user.id, user, tokens);
-      const regex = /s([1,3]f10[0-9]{6})[0-9]@iniad.org/;
-      const match = regex.exec(session.user.email.toLowerCase());
-      const studentId = match ? match[1] : null;
       if (linkedAccount) {
-        await updateMetadata(
-          c.env.DISCORD_CLIENT_ID,
-          linkedAccount.accessToken,
-          studentId ?? session.user.email,
-          `${session.user.familyName} ${session.user.givenName}`,
-        );
+        await updateMetadata(c.env.DISCORD_CLIENT_ID, linkedAccount.accessToken, session.user);
       } else {
         return c.json({ error: "failed to link account" }, 500);
       }

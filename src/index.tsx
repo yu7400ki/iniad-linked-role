@@ -27,7 +27,7 @@ app.get("/", authMiddleware(), async (c) => {
   const linkedAccounts = await getLinkedAccounts(db, session.user.id);
   return c.render(
     <div>
-      <h1>Hello! {session.user.givenName}</h1>
+      <h1>Hello! {session.user.name}</h1>
       <h2>Linked Discord Accounts</h2>
       <li>
         {linkedAccounts?.discord.map((account) => {
@@ -56,7 +56,7 @@ app.get("/linked-role", authMiddleware({ redirect: true }), async (c) => {
     <div>
       <h1>Linked Role</h1>
       <p>
-        Logged in as {session.user.givenName} ({session.user.email})
+        Logged in as {session.user.name} ({session.user.email})
       </p>
       <a href="/api/auth/discord/login">Link Discord Account</a>
     </div>,
