@@ -4,6 +4,7 @@ import { renderer } from "@/renderer";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { apiRouter } from "./api";
+import { authMiddleware } from "./middleware/auth";
 import { sessionMiddleware } from "./middleware/session";
 
 const app = new Hono<Env>();
@@ -18,11 +19,9 @@ app.get("*", sessionMiddleware());
 
 app.route("/api", apiRouter);
 
-app.get("/", (c) => {
+app.get("/", authMiddleware(), (c) => {
   const session = c.get("session");
-  if (!session) {
-    return c.redirect("/login");
-  }
+  if (!session) return c.redirect("/login");
   return c.render(
     <div>
       <h1>Hello! {session.user.givenName}</h1>
