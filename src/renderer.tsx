@@ -13,6 +13,7 @@ export const renderer = jsxRenderer(
       <html lang="en">
         <head>
           <link href="/static/style.css" rel="stylesheet" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>{title}</title>
         </head>
         <body>{children}</body>

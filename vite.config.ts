@@ -20,6 +20,7 @@ export default defineConfig({
             DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID as string,
             DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET as string,
             DISCORD_REDIRECT_URI: process.env.DISCORD_REDIRECT_URI as string,
+            DISCORD_TOKEN: process.env.DISCORD_TOKEN as string,
           },
           d1Databases: ["DB"],
           d1Persist: true,
