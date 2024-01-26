@@ -12,6 +12,12 @@ export default defineConfig({
       entry: "src/index.tsx",
       plugins: [
         pages({
+          bindings: {
+            ENV: "DEV",
+            GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
+            GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
+            GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI as string,
+          },
           d1Databases: ["DB"],
           d1Persist: true,
         }),
