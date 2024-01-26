@@ -1,6 +1,5 @@
 import type { Env } from "@/env";
 import type { Context } from "hono";
-import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 
 export const authMiddleware = ({
@@ -9,7 +8,7 @@ export const authMiddleware = ({
   redirect?: string | boolean;
 } = {}) =>
   createMiddleware(async (c: Context<Env>, next) => {
-    const session = getCookie(c, "session");
+    const session = c.get("session");
     if (!session) {
       if (typeof redirect === "string") {
         const query = new URLSearchParams({ redirect }).toString();
