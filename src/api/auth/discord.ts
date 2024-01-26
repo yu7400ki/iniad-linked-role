@@ -1,7 +1,9 @@
 import type { Env } from "@/env";
 import {
+  getAccessToken,
   getAuthorizationUrl,
   linkAccount,
+  unlinkAccount,
   updateMetadata,
   validationCallback,
 } from "@/helper/discord";
@@ -59,7 +61,9 @@ const callback = factory.createHandlers(
       const { user, tokens } = await validationCallback(discord, code);
       const linkedAccount = await linkAccount(db, session.user.id, user, tokens);
       if (linkedAccount) {
-        await updateMetadata(c.env.DISCORD_CLIENT_ID, linkedAccount.accessToken, session.user);
+        await updateMetadata(c.env.DISCORD_CLIENT_ID, linkedAccount.accessToken, session.user, {
+          linked: true,
+        });
       } else {
         return c.json({ error: "failed to link account" }, 500);
       }
@@ -75,4 +79,26 @@ const callback = factory.createHandlers(
   },
 );
 
-export const discordRouter = new Hono().get("/login", ...login).get("/callback", ...callback);
+const unlink = factory.createHandlers(authMiddleware({ redirect: true }), middleware, async (c) => {
+  const db = c.get("db");
+  const session = c.get("session");
+  const discord = c.get("discord");
+  const discordId = c.req.query("discord-id");
+  if (!discordId) {
+    return c.json({ error: "invalid request" }, 400);
+  }
+  const accessToken = await getAccessToken(db, discord, discordId);
+  if (!accessToken) {
+    return c.json({ error: "invalid request" }, 400);
+  }
+  await updateMetadata(c.env.DISCORD_CLIENT_ID, accessToken, session.user, {
+    linked: false,
+  });
+  await unlinkAccount(db, discordId);
+  return c.redirect("/");
+});
+
+export const discordRouter = new Hono()
+  .get("/login", ...login)
+  .get("/callback", ...callback)
+  .get("/unlink", ...unlink);

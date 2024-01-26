@@ -9,7 +9,8 @@
     "format": "biome check --apply ./src",
     "prepare": "husky",
     "generate:migrations": "drizzle-kit generate:sqlite",
-    "migrate:local": "tsx migrate.ts"
+    "migrate:local": "tsx migrate.ts",
+    "register": "dotenv -e .dev.vars -- tsx register.ts"
   },
   "dependencies": {
     "arctic": "^1.0.0",

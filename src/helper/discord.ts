@@ -101,8 +101,23 @@ export const linkAccount = async (
   return linkedAccount;
 };
 
-export const updateMetadata = async (clientId: string, accessToken: string, user: User) => {
-  const metadata = {};
+export const unlinkAccount = async (db: DrizzleD1Database<typeof schema>, discordId: string) => {
+  const result = await db
+    .delete(schema.discord)
+    .where(eq(schema.discord.id, discordId))
+    .returning();
+  if (result.length === 0) {
+    throw new Error("Failed to unlink account");
+  }
+  return result[0];
+};
+
+export const updateMetadata = async (
+  clientId: string,
+  accessToken: string,
+  user: User,
+  metadata: Metadata,
+) => {
   const url = `https://discord.com/api/v10/users/@me/applications/${clientId}/role-connection`;
   const regex = /s([1,3]f10[0-9]{6})[0-9]@iniad.org/;
   const match = regex.exec(user.email.toLowerCase());
@@ -125,6 +140,29 @@ export const updateMetadata = async (clientId: string, accessToken: string, user
   }
 };
 
+export const getAccessToken = async (
+  db: DrizzleD1Database<typeof schema>,
+  discord: Discord,
+  discordId: string,
+) => {
+  const discordAccount = await getDiscordAccount(db, discordId);
+  if (!discordAccount) return null;
+  if (discordAccount.expiresAt < new Date()) {
+    const tokens = await discord.refreshAccessToken(discordAccount.refreshToken);
+    await db
+      .update(schema.discord)
+      .set({
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresAt: tokens.accessTokenExpiresAt,
+      })
+      .where(eq(schema.discord.id, discordId))
+      .returning();
+    return tokens.accessToken;
+  }
+  return discordAccount.accessToken;
+};
+
 export type DiscordUser = {
   id: string;
   username: string;
@@ -143,4 +181,8 @@ export type DiscordUser = {
   public_flags?: number;
   locale?: string;
   avatar_decoration?: string | null;
+};
+
+export type Metadata = {
+  linked: boolean;
 };
