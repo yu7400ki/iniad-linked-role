@@ -26,7 +26,11 @@ const middleware = factory.createMiddleware(async (c, next) => {
 });
 
 const login = factory.createHandlers(middleware, async (c) => {
-  const redirect = c.req.query("redirect");
+  const data = await c.req.parseBody();
+  const redirect = data.redirect;
+  if (redirect && typeof redirect !== "string") {
+    return c.json({ error: "invalid request" }, 400);
+  }
   const user = c.get("session");
   if (user) return c.redirect(redirect || "/");
   const google = c.get("google");
@@ -82,4 +86,4 @@ const callback = factory.createHandlers(middleware, async (c) => {
   }
 });
 
-export const googleRouter = new Hono().get("/login", ...login).get("/callback", ...callback);
+export const googleRouter = new Hono().post("/login", ...login).get("/callback", ...callback);

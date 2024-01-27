@@ -6,6 +6,7 @@ import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { csrf } from "hono/csrf";
+import { twMerge } from "tailwind-merge";
 import { apiRouter } from "./api";
 import { buttonVariants } from "./components/ui/button";
 import { getLinkedAccounts } from "./helper/discord";
@@ -16,20 +17,20 @@ import { sessionMiddleware } from "./middleware/session";
 const app = new Hono<Env>();
 
 app.get("*", renderer);
-app.get("*", async (c, next) => {
+app.use("*", async (c, next) => {
   const db = drizzle(c.env.DB, { schema });
   c.set("db", db);
   await next();
 });
-app.get("*", async (c, next) => {
+app.use("*", async (c, next) => {
   const db = drizzle(c.env.DB);
   const adapter = new DrizzleSQLiteAdapter(db, sessionTable, userTable);
   const lucia = createLucia(adapter, c.env.ENV !== "production");
   c.set("lucia", lucia);
   await next();
 });
-app.get("*", csrf());
-app.get("*", sessionMiddleware());
+app.use("*", csrf());
+app.use("*", sessionMiddleware());
 
 app.route("/api", apiRouter);
 
@@ -48,21 +49,21 @@ app.get("/", authMiddleware(), async (c) => {
             <p class="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
-        <div class="flex flex-col gap-2">
+        <form method="POST" action="/api/auth/discord/unlink" class="flex flex-col gap-2">
           <p class="text-md">Linked Accounts</p>
           {linkedAccounts?.discord.length === 0 ? (
             <p class="text-sm text-muted-foreground">No linked accounts...</p>
           ) : (
             <ul>
               {linkedAccounts?.discord.map((account) => (
-                <li class="flex items-center h-10 gap-2 p-2 bg-muted rounded-md">
+                <li class="flex items-center gap-2 h-10 p-2 bg-muted rounded-md">
                   <img
                     src={`https://cdn.discordapp.com/avatars/${account.id}/${account.avatar}.png`}
                     alt={account.username}
                     class="aspect-square h-full rounded-full"
                   />
                   <p class="mr-auto">{account.username}</p>
-                  <a href={`/api/auth/discord/unlink?discord-id=${account.id}`} class="p-1">
+                  <button type="submit" class="p-1" name="id" value={account.id}>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       class="icon icon-tabler icon-tabler-x"
@@ -80,15 +81,17 @@ app.get("/", authMiddleware(), async (c) => {
                       <path d="M18 6l-12 12" />
                       <path d="M6 6l12 12" />
                     </svg>
-                  </a>
+                  </button>
                 </li>
               ))}
             </ul>
           )}
-        </div>
-        <a href="/api/auth/logout" class={buttonVariants()}>
-          Logout
-        </a>
+        </form>
+        <form method="POST" action="/api/auth/logout" class="flex">
+          <button type="submit" class={twMerge(buttonVariants(), "flex-1")}>
+            Logout
+          </button>
+        </form>
       </div>
     </div>,
   );
@@ -100,9 +103,16 @@ app.get("/login", (c) => {
     <div class="min-h-dvh grid place-items-center max-w-5xl px-4 md:px-6 lg:px-8 mx-auto">
       <div class="flex flex-col gap-6">
         <h1 class="text-4xl font-bold">INIAD Linked Role</h1>
-        <a href={`/api/auth/google/login?${query}`} class={buttonVariants()}>
-          Login with Google
-        </a>
+        <form method="POST" action="/api/auth/google/login" class="flex">
+          <button
+            type="submit"
+            class={twMerge(buttonVariants(), "flex-1")}
+            name="redirect"
+            value={query.get("redirect") || undefined}
+          >
+            Login with Google
+          </button>
+        </form>
       </div>
     </div>,
   );
@@ -121,9 +131,11 @@ app.get("/linked-role", authMiddleware({ redirect: true }), async (c) => {
           <p class="text-sm text-muted-foreground">{user.email}</p>
         </div>
         <div class="flex flex-col w-full gap-1">
-          <a href="/api/auth/discord/login" class={buttonVariants()}>
-            Link Discord Account
-          </a>
+          <form method="POST" action="/api/auth/discord/login" class="flex">
+            <button type="submit" class={twMerge(buttonVariants(), "flex-1")}>
+              Link Discord Account
+            </button>
+          </form>
           <a href="/" class={buttonVariants({ variant: "outline" })}>
             Cancel
           </a>

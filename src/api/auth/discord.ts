@@ -77,11 +77,12 @@ const callback = factory.createHandlers(authMiddleware(), middleware, async (c) 
 });
 
 const unlink = factory.createHandlers(authMiddleware(), middleware, async (c) => {
+  const data = await c.req.parseBody();
   const db = c.get("db");
   const user = c.get("user");
   const discord = c.get("discord");
-  const discordId = c.req.query("discord-id");
-  if (!discordId) {
+  const discordId = data.id;
+  if (!discordId || typeof discordId !== "string") {
     return c.json({ error: "invalid request" }, 400);
   }
   const accessToken = await getAccessToken(db, discord, discordId);
@@ -96,6 +97,6 @@ const unlink = factory.createHandlers(authMiddleware(), middleware, async (c) =>
 });
 
 export const discordRouter = new Hono()
-  .get("/login", ...login)
+  .post("/login", ...login)
   .get("/callback", ...callback)
-  .get("/unlink", ...unlink);
+  .post("/unlink", ...unlink);
