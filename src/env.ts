@@ -1,7 +1,7 @@
 import type * as schema from "@/db/schema";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
-import type { Session } from "./helper/auth";
-import type { User } from "./helper/auth";
+import type { Register } from "lucia";
+import type { Session, User } from "lucia";
 
 export type Bindings = {
   DB: D1Database;
@@ -17,7 +17,9 @@ export type Bindings = {
 
 export type Variables = {
   db: DrizzleD1Database<typeof schema>;
-  session: (Session & { user: User }) | null;
+  session: Session | null;
+  user: User | null;
+  lucia: Register["Lucia"];
 };
 
 export type Env = {

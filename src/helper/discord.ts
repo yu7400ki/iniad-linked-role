@@ -3,7 +3,7 @@ import { generateState } from "arctic";
 import type { Discord, DiscordTokens } from "arctic";
 import { eq } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
-import type { User } from "./auth";
+import type { User } from "lucia";
 
 export const getAuthorizationUrl = async (discord: Discord): Promise<[URL, string]> => {
   const state = generateState();

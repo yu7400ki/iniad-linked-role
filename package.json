@@ -9,17 +9,21 @@
     "deploy": "$npm_execpath run build && wrangler pages deploy dist",
     "lint": "biome check ./src",
     "format": "biome check --apply ./src",
+    "typecheck": "tsc --noEmit",
     "prepare": "husky",
     "generate:migrations": "drizzle-kit generate:sqlite",
     "migrate:local": "tsx migrate.ts",
     "register": "dotenv -e .dev.vars -- tsx register.ts"
   },
   "dependencies": {
+    "@lucia-auth/adapter-drizzle": "^1.0.0",
     "arctic": "^1.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "drizzle-orm": "^0.29.3",
     "hono": "^3.12.7",
+    "lucia": "^3.0.0",
+    "oslo": "^1.0.2",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7"
   },
@@ -39,6 +43,7 @@
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
     "vite": "^5.0.12",
     "vite-tsconfig-paths": "^4.3.1",
     "wrangler": "^3.22.0"

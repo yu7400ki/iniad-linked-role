@@ -12,9 +12,7 @@ export const user = sqliteTable("user", {
 
 export const session = sqliteTable("user_session", {
   id: text("id").primaryKey(),
-  expiresAt: integer("expires_at", {
-    mode: "timestamp",
-  }).notNull(),
+  expiresAt: integer("expires_at").notNull(),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),

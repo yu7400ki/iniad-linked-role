@@ -1,11 +1,15 @@
 import * as schema from "@/db/schema";
+import { session as sessionTable, user as userTable } from "@/db/schema";
 import type { Env } from "@/env";
 import { renderer } from "@/renderer";
+import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
+import { csrf } from "hono/csrf";
 import { apiRouter } from "./api";
 import { buttonVariants } from "./components/ui/button";
 import { getLinkedAccounts } from "./helper/discord";
+import { createLucia } from "./lib/auth";
 import { authMiddleware } from "./middleware/auth";
 import { sessionMiddleware } from "./middleware/session";
 
@@ -17,27 +21,31 @@ app.get("*", async (c, next) => {
   c.set("db", db);
   await next();
 });
+app.get("*", async (c, next) => {
+  const db = drizzle(c.env.DB);
+  const adapter = new DrizzleSQLiteAdapter(db, sessionTable, userTable);
+  const lucia = createLucia(adapter, c.env.ENV !== "production");
+  c.set("lucia", lucia);
+  await next();
+});
+app.get("*", csrf());
 app.get("*", sessionMiddleware());
 
 app.route("/api", apiRouter);
 
 app.get("/", authMiddleware(), async (c) => {
   const db = c.get("db");
-  const session = c.get("session");
-  if (!session) return c.redirect("/login");
-  const linkedAccounts = await getLinkedAccounts(db, session.user.id);
+  const user = c.get("user");
+  if (!user) return c.redirect("/login");
+  const linkedAccounts = await getLinkedAccounts(db, user.id);
   return c.render(
     <div class="min-h-dvh grid place-items-center max-w-5xl px-4 md:px-6 lg:px-8 mx-auto">
       <div class="flex flex-col gap-4">
         <div class="flex gap-2 items-center h-10">
-          <img
-            src={session.user.picture}
-            alt={session.user.name}
-            class="aspect-square h-full rounded-full"
-          />
+          <img src={user.picture} alt={user.name} class="aspect-square h-full rounded-full" />
           <div>
-            <p class="text-md">{session.user.name}</p>
-            <p class="text-sm text-muted-foreground">{session.user.email}</p>
+            <p class="text-md">{user.name}</p>
+            <p class="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
         <div class="flex flex-col gap-2">
@@ -101,20 +109,16 @@ app.get("/login", (c) => {
 });
 
 app.get("/linked-role", authMiddleware({ redirect: true }), async (c) => {
-  const session = c.get("session");
-  if (!session) return c.redirect("/login");
+  const user = c.get("user");
+  if (!user) return c.redirect("/login");
   return c.render(
     <div class="min-h-dvh grid place-items-center max-w-5xl px-4 md:px-6 lg:px-8 mx-auto">
       <div class="flex flex-col gap-6 items-center">
         <h1 class="text-4xl font-bold">Link Account</h1>
         <div class="flex flex-col items-center">
-          <img
-            src={session.user.picture}
-            alt={session.user.name}
-            class="aspect-square h-20 rounded-full mb-2"
-          />
-          <p class="text font-bold">{session.user.name}</p>
-          <p class="text-sm text-muted-foreground">{session.user.email}</p>
+          <img src={user.picture} alt={user.name} class="aspect-square h-20 rounded-full mb-2" />
+          <p class="text font-bold">{user.name}</p>
+          <p class="text-sm text-muted-foreground">{user.email}</p>
         </div>
         <div class="flex flex-col w-full gap-1">
           <a href="/api/auth/discord/login" class={buttonVariants()}>

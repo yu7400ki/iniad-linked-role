@@ -1,18 +1,15 @@
 import type { Env } from "@/env";
-import { createSessionCookie, invalidateSession } from "@/helper/auth";
+import { setLuciaCookie } from "@/helper/auth";
 import { Hono } from "hono";
-import { setCookie } from "hono/cookie";
 
 export const logoutRouter = new Hono<Env>().get("/", async (c) => {
   const session = c.get("session");
-  const db = c.get("db");
+  const lucia = c.get("lucia");
   if (!session) {
     return c.redirect("/");
   }
-  await invalidateSession(db, session.id);
-  const cookie = createSessionCookie(null, {
-    secure: c.env.ENV !== "DEV",
-  });
-  setCookie(c, cookie.name, cookie.value, cookie.options);
+  await lucia.invalidateSession(session.id);
+  const cookie = lucia.createBlankSessionCookie();
+  setLuciaCookie(c, cookie);
   return c.redirect("/");
 });

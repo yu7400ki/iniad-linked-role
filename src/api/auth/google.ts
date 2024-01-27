@@ -1,5 +1,5 @@
 import type { Env } from "@/env";
-import { createSession, createSessionCookie } from "@/helper/auth";
+import { setLuciaCookie } from "@/helper/auth";
 import { getAuthorizationUrl, saveUser, validationCallback } from "@/helper/google";
 import { Google, OAuth2RequestError } from "arctic";
 import { Hono } from "hono";
@@ -49,6 +49,7 @@ const callback = factory.createHandlers(middleware, async (c) => {
   const db = c.get("db");
   const code = c.req.query("code");
   const state = c.req.query("state");
+  const lucia = c.get("lucia");
   const storedState = getCookie(c, "state");
   const storedCodeVerifier = getCookie(c, "code_verifier");
   const redirect = getCookie(c, "redirect");
@@ -61,11 +62,15 @@ const callback = factory.createHandlers(middleware, async (c) => {
       return c.text("Forbidden", 403);
     }
     const savedUser = await saveUser(db, user);
-    const session = await createSession(db, savedUser.id);
-    const cookie = createSessionCookie(session, {
-      secure: c.env.ENV !== "DEV",
+    const session = await lucia.createSession(savedUser.id, {
+      email: savedUser.email,
+      name: savedUser.name,
+      familyName: savedUser.familyName,
+      givenName: savedUser.givenName,
+      picture: savedUser.picture,
     });
-    setCookie(c, cookie.name, cookie.value, cookie.options);
+    const cookie = lucia.createSessionCookie(session.id);
+    setLuciaCookie(c, cookie);
     return c.redirect(redirect || "/");
   } catch (err) {
     if (err instanceof OAuth2RequestError) {
