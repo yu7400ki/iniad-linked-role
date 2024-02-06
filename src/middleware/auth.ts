@@ -1,5 +1,4 @@
 import type { Env } from "@/env";
-import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 
 export const authMiddleware = ({
@@ -7,7 +6,12 @@ export const authMiddleware = ({
 }: {
   redirect?: string | boolean;
 } = {}) =>
-  createMiddleware(async (c: Context<Env>, next) => {
+  createMiddleware<{
+    Variables: {
+      session: NonNullable<Env["Variables"]["session"]>;
+      user: NonNullable<Env["Variables"]["user"]>;
+    };
+  }>(async (c, next) => {
     const session = c.get("session");
     if (!session) {
       if (typeof redirect === "string") {

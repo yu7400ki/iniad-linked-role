@@ -1,11 +1,10 @@
 import type { Env } from "@/env";
 import { setLuciaCookie } from "@/helper/auth";
-import type { Context } from "hono";
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 
 export const sessionMiddleware = () =>
-  createMiddleware(async (c: Context<Env>, next) => {
+  createMiddleware<Env>(async (c, next) => {
     const lucia = c.get("lucia");
     const sessionId = getCookie(c, lucia.sessionCookieName);
     if (!sessionId) {

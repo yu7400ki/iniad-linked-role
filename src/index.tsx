@@ -103,16 +103,9 @@ app.get("/login", (c) => {
     <div class="min-h-dvh grid place-items-center max-w-5xl px-4 md:px-6 lg:px-8 mx-auto">
       <div class="flex flex-col gap-6">
         <h1 class="text-4xl font-bold">INIAD Linked Role</h1>
-        <form method="POST" action="/api/auth/google/login" class="flex">
-          <button
-            type="submit"
-            class={twMerge(buttonVariants(), "flex-1")}
-            name="redirect"
-            value={query.get("redirect") || undefined}
-          >
-            Login with Google
-          </button>
-        </form>
+        <a href={`/api/auth/google?${query.toString()}`} class={buttonVariants()}>
+          Login with Google
+        </a>
       </div>
     </div>,
   );
@@ -131,11 +124,9 @@ app.get("/linked-role", authMiddleware({ redirect: true }), async (c) => {
           <p class="text-sm text-muted-foreground">{user.email}</p>
         </div>
         <div class="flex flex-col w-full gap-1">
-          <form method="POST" action="/api/auth/discord/login" class="flex">
-            <button type="submit" class={twMerge(buttonVariants(), "flex-1")}>
-              Link Discord Account
-            </button>
-          </form>
+          <a href="/api/auth/discord" class={buttonVariants()}>
+            Link Discord Role
+          </a>
           <a href="/" class={buttonVariants({ variant: "outline" })}>
             Cancel
           </a>
